@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://di7s2v11gjnef"]
+
+[ext_resource type="Script" uid="uid://tqyo6megwt4o" path="res://Main.cs" id="1_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://xpymlo5sn1r4" path="res://Block.tscn" id="2_h2yge"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l27gl"]
+transparency = 1
+albedo_color = Color(18.892157, 18.892157, 18.892157, 0.19607843)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qxn02"]
+material = SubResource("StandardMaterial3D_l27gl")
+size = Vector3(10.2, 20.2, 0.1)
+
+[node name="Main" type="Node3D" unique_id=751829203]
+script = ExtResource("1_0xm2m")
+BlockScene = ExtResource("2_h2yge")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1260061641]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1444585596]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 9.5, 16)
+current = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=40605281]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1656581189]
+
+[node name="ScoreLabel" type="Label" parent="CanvasLayer" unique_id=481234695]
+offset_left = 168.0
+offset_top = 28.0
+offset_right = 229.0
+offset_bottom = 51.0
+text = "Score: 0"
+
+[node name="GameOverPanel" type="Control" parent="CanvasLayer" unique_id=1728632781]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="GameOverLabel" type="Label" parent="CanvasLayer/GameOverPanel" unique_id=1600719483]
+layout_mode = 0
+offset_left = 556.0
+offset_top = 274.0
+offset_right = 679.0
+offset_bottom = 323.0
+text = "GAME OVER bro"
+
+[node name="RestartButton" type="Button" parent="CanvasLayer/GameOverPanel" unique_id=1567559799]
+layout_mode = 0
+offset_left = 524.0
+offset_top = 310.0
+offset_right = 710.0
+offset_bottom = 421.0
+text = "Restart"
+
+[node name="BoardBorder" type="Node3D" parent="." unique_id=1144437503]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BoardBorder" unique_id=1507128444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 9.5, -0.5)
+mesh = SubResource("BoxMesh_qxn02")

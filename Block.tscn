@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://xpymlo5sn1r4"]
+
+[ext_resource type="Script" uid="uid://pysoao7qtvk7" path="res://Block.cs" id="1_2wby2"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hfsdp"]
+albedo_color = Color(0, 0.23921569, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qxn02"]
+material = SubResource("StandardMaterial3D_hfsdp")
+size = Vector3(0.95, 0.95, 0.95)
+
+[node name="Block" type="Node3D" unique_id=1024584210]
+script = ExtResource("1_2wby2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1819161939]
+mesh = SubResource("BoxMesh_qxn02")
