@@ -28,14 +28,14 @@ public partial class Main : Node3D
     private readonly int[] _linePoints = { 0, 100, 300, 500, 800 };
 
     private float _dropTimer = 0.0f;
-    private float _dropInterval = 0.8f;
+    private float _dropInterval = 1.5f;
     private bool _isGameOver = false;
 
     private string _nextShapeKey;
     private Color _nextColor;
 
     private Node3D _cameraPivot;
-    private float _targetYRotation = 0.0f;
+    private float _targetYRotation = Mathf.Pi / 4.0f; // 45 degrees initial rotation
 
     private readonly Dictionary<string, Color> _shapeColors = new()
     {
@@ -93,6 +93,11 @@ public partial class Main : Node3D
 
         _cameraPivot = GetNode<Node3D>("CameraPivot");
 
+        // Apply starting camera rotation
+        Vector3 startRot = _cameraPivot.Rotation;
+        startRot.Y = _targetYRotation;
+        _cameraPivot.Rotation = startRot;
+
         UpdateScoreUI();
 
         var nextPiece = GetRandomPiece();
@@ -109,46 +114,112 @@ public partial class Main : Node3D
     {
         if (_isGameOver) return;
 
+        // --- Camera Rotation Inputs (Q / E) ---
+        if (Input.IsActionJustPressed("rotate_cam_left"))
+            _targetYRotation += Mathf.Pi / 2.0f;
+        else if (Input.IsActionJustPressed("rotate_cam_right"))
+            _targetYRotation -= Mathf.Pi / 2.0f;
+
+        // Smoothly rotate camera pivot
+        Vector3 currentRot = _cameraPivot.Rotation;
+        currentRot.Y = Mathf.LerpAngle(currentRot.Y, _targetYRotation, (float)delta * 10.0f);
+        _cameraPivot.Rotation = currentRot;
+
+        // --- Piece Movement Controls (Camera-Relative) ---
+        if (Input.IsActionJustPressed("ui_left"))
+            TryMove(GetCameraRelativeDirection(new Vector3I(-1, 0, 0))); // Left relative to view
+        else if (Input.IsActionJustPressed("ui_right"))
+            TryMove(GetCameraRelativeDirection(new Vector3I(1, 0, 0)));  // Right relative to view
+        else if (Input.IsActionJustPressed("ui_up"))
+            TryMove(GetCameraRelativeDirection(new Vector3I(0, 0, -1))); // Away from camera
+        else if (Input.IsActionJustPressed("ui_down"))
+            TryMove(GetCameraRelativeDirection(new Vector3I(0, 0, 1)));  // Towards camera
+        else if (Input.IsActionJustPressed("ui_accept"))
+            HardDrop();
+        else if (Input.IsActionJustPressed("ui_select"))
+            RotatePiece();
+        else if (Input.IsActionJustPressed("ui_x"))
+            RotatePieceX();
+        else if (Input.IsActionJustPressed("ui_z"))
+            RotatePieceZ();
+
+        // Gravity drop timer
         _dropTimer += (float)delta;
         if (_dropTimer >= _dropInterval)
         {
             _dropTimer = 0.0f;
-            TryMove(new Vector3I(0, -1, 0)); // Drop down Y-axis
+            TryMove(new Vector3I(0, -1, 0)); // Always drops down along Y-axis
+        }
+    }
+
+    // --- 3D Rotation Methods ---
+
+    private void RotatePiece()
+    {
+        // Y-Axis rotation (Yaw)
+        List<Vector3I> rotatedBlocks = new();
+        foreach (var b in _currentShapeBlocks)
+        {
+            rotatedBlocks.Add(new Vector3I(-b.Z, b.Y, b.X));
         }
 
-        // X and Z movement controls
-        if (Input.IsActionJustPressed("ui_left"))
-            TryMove(new Vector3I(-1, 0, 0));
-        if (Input.IsActionJustPressed("hard_down")) HardDrop();
-        else if (Input.IsActionJustPressed("ui_right"))
-            TryMove(new Vector3I(1, 0, 0));
-        else if (Input.IsActionJustPressed("ui_up"))
-            TryMove(new Vector3I(0, 0, -1)); // Move backward along Z
-        else if (Input.IsActionJustPressed("ui_down"))
-            TryMove(new Vector3I(0, 0, 1));  // Move forward along Z
-        else if (Input.IsActionJustPressed("ui_select")) // Spacebar or Custom key for Rotate
-            RotatePiece();
+        if (IsValidPosition(rotatedBlocks, _currentPos))
+        {
+            _currentShapeBlocks = rotatedBlocks;
+            UpdatePiecePosition();
+        }
     }
+
+    private void RotatePieceX()
+    {
+        // X-Axis rotation (Pitch)
+        List<Vector3I> rotatedBlocks = new();
+        foreach (var b in _currentShapeBlocks)
+        {
+            rotatedBlocks.Add(new Vector3I(b.X, -b.Z, b.Y));
+        }
+
+        if (IsValidPosition(rotatedBlocks, _currentPos))
+        {
+            _currentShapeBlocks = rotatedBlocks;
+            UpdatePiecePosition();
+        }
+    }
+
+    private void RotatePieceZ()
+    {
+        // Z-Axis rotation (Roll)
+        List<Vector3I> rotatedBlocks = new();
+        foreach (var b in _currentShapeBlocks)
+        {
+            rotatedBlocks.Add(new Vector3I(-b.Y, b.X, b.Z));
+        }
+
+        if (IsValidPosition(rotatedBlocks, _currentPos))
+        {
+            _currentShapeBlocks = rotatedBlocks;
+            UpdatePiecePosition();
+        }
+    }
+
+    // --- Wireframe Setup ---
 
     private void CreateBoardWireframe()
     {
         var meshInstance = new MeshInstance3D();
         var immediateMesh = new ImmediateMesh();
 
-        // Create an unshaded material so the box lines ignore scene lighting
         var material = new StandardMaterial3D
         {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            AlbedoColor = new Color(1.0f, 1.0f, 1.0f, 0.4f), // Semi-transparent white
+            AlbedoColor = new Color(1.0f, 1.0f, 1.0f, 0.4f),
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha
         };
 
-        // Calculate boundary limits centered around the 1x1x1 grid blocks
         float minX = -0.5f, maxX = BoardWidth - 0.5f;
         float minY = -0.5f, maxY = BoardHeight - 0.5f;
         float minZ = -0.5f, maxZ = BoardDepth - 0.5f;
 
-        // Begin drawing lines
         immediateMesh.SurfaceBegin(Mesh.PrimitiveType.Lines, material);
 
         void AddLine(Vector3 start, Vector3 end)
@@ -157,23 +228,18 @@ public partial class Main : Node3D
             immediateMesh.SurfaceAddVertex(end);
         }
 
-        // --- 1. Outer Bounding Box (12 Edges) ---
         Vector3[] c = new Vector3[]
         {
-        new(minX, minY, minZ), new(maxX, minY, minZ),
-        new(maxX, minY, maxZ), new(minX, minY, maxZ),
-        new(minX, maxY, minZ), new(maxX, maxY, minZ),
-        new(maxX, maxY, maxZ), new(minX, maxY, maxZ)
+            new(minX, minY, minZ), new(maxX, minY, minZ),
+            new(maxX, minY, maxZ), new(minX, minY, maxZ),
+            new(minX, maxY, minZ), new(maxX, maxY, minZ),
+            new(maxX, maxY, maxZ), new(minX, maxY, maxZ)
         };
 
-        // Bottom rectangle
         AddLine(c[0], c[1]); AddLine(c[1], c[2]); AddLine(c[2], c[3]); AddLine(c[3], c[0]);
-        // Top rectangle
         AddLine(c[4], c[5]); AddLine(c[5], c[6]); AddLine(c[6], c[7]); AddLine(c[7], c[4]);
-        // Vertical corner pillars
         AddLine(c[0], c[4]); AddLine(c[1], c[5]); AddLine(c[2], c[6]); AddLine(c[3], c[7]);
 
-        // --- 2. Bottom Floor Grid Lines (Helps judge where pieces land) ---
         for (int x = 1; x < BoardWidth; x++)
         {
             float xPos = x - 0.5f;
@@ -216,20 +282,201 @@ public partial class Main : Node3D
         return false;
     }
 
-    private void RotatePiece()
+    // --- Clearing Logic (Full Layer + Outer Edges) ---
+
+    private void CheckAndClearLayers()
     {
-        // Y-Axis rotation (Yaw): (x, y, z) -> (-z, y, x)
-        List<Vector3I> rotatedBlocks = new();
-        foreach (var b in _currentShapeBlocks)
+        int linesCleared = 0;
+
+        for (int y = 0; y < BoardHeight; y++)
         {
-            rotatedBlocks.Add(new Vector3I(-b.Z, b.Y, b.X));
+            // 1. Check if full 5x5 layer is filled
+            if (IsLayerFull(y))
+            {
+                ClearLayer(y);
+                ShiftLayersDownAbove(y);
+                linesCleared += 4;
+                y--;
+                continue;
+            }
+
+            // 2. Check individual 5-block outer edge lines
+            bool clearedAnyEdge = false;
+
+            if (IsLineFullX(y, 0)) // Back Edge
+            {
+                ClearLineX(y, 0);
+                ShiftColumnLineDownX(y, 0);
+                linesCleared++;
+                clearedAnyEdge = true;
+            }
+            if (IsLineFullX(y, BoardDepth - 1)) // Front Edge
+            {
+                ClearLineX(y, BoardDepth - 1);
+                ShiftColumnLineDownX(y, BoardDepth - 1);
+                linesCleared++;
+                clearedAnyEdge = true;
+            }
+            if (IsLineFullZ(y, 0)) // Left Edge
+            {
+                ClearLineZ(y, 0);
+                ShiftColumnLineDownZ(y, 0);
+                linesCleared++;
+                clearedAnyEdge = true;
+            }
+            if (IsLineFullZ(y, BoardWidth - 1)) // Right Edge
+            {
+                ClearLineZ(y, BoardWidth - 1);
+                ShiftColumnLineDownZ(y, BoardWidth - 1);
+                linesCleared++;
+                clearedAnyEdge = true;
+            }
+
+            if (clearedAnyEdge)
+            {
+                y--;
+            }
         }
 
-        if (IsValidPosition(rotatedBlocks, _currentPos))
+        if (linesCleared > 0)
         {
-            _currentShapeBlocks = rotatedBlocks;
-            UpdatePiecePosition();
+            _score += _linePoints[Mathf.Min(linesCleared, 4)];
+            UpdateScoreUI();
         }
+    }
+
+    // --- Full Layer Helpers ---
+
+    private bool IsLayerFull(int y)
+    {
+        for (int x = 0; x < BoardWidth; x++)
+            for (int z = 0; z < BoardDepth; z++)
+                if (_grid[x, y, z] == null) return false;
+        return true;
+    }
+
+    private void ClearLayer(int y)
+    {
+        for (int x = 0; x < BoardWidth; x++)
+        {
+            for (int z = 0; z < BoardDepth; z++)
+            {
+                if (_grid[x, y, z] != null)
+                {
+                    _grid[x, y, z].QueueFree();
+                    _grid[x, y, z] = null;
+                }
+            }
+        }
+    }
+
+    private void ShiftLayersDownAbove(int clearedY)
+    {
+        for (int y = clearedY; y < BoardHeight - 1; y++)
+        {
+            for (int x = 0; x < BoardWidth; x++)
+            {
+                for (int z = 0; z < BoardDepth; z++)
+                {
+                    _grid[x, y, z] = _grid[x, y + 1, z];
+                    if (_grid[x, y, z] != null)
+                        _grid[x, y, z].Position = new Vector3(x, y, z);
+                    _grid[x, y + 1, z] = null;
+                }
+            }
+        }
+    }
+
+    // --- Outer Line Check Helpers ---
+
+    private bool IsLineFullX(int y, int z)
+    {
+        for (int x = 0; x < BoardWidth; x++)
+        {
+            if (_grid[x, y, z] == null) return false;
+        }
+        return true;
+    }
+
+    private bool IsLineFullZ(int y, int x)
+    {
+        for (int z = 0; z < BoardDepth; z++)
+        {
+            if (_grid[x, y, z] == null) return false;
+        }
+        return true;
+    }
+
+    private void ClearLineX(int y, int z)
+    {
+        for (int x = 0; x < BoardWidth; x++)
+        {
+            if (_grid[x, y, z] != null)
+            {
+                _grid[x, y, z].QueueFree();
+                _grid[x, y, z] = null;
+            }
+        }
+    }
+
+    private void ClearLineZ(int y, int x)
+    {
+        for (int z = 0; z < BoardDepth; z++)
+        {
+            if (_grid[x, y, z] != null)
+            {
+                _grid[x, y, z].QueueFree();
+                _grid[x, y, z] = null;
+            }
+        }
+    }
+
+    private void ShiftColumnLineDownX(int clearedY, int z)
+    {
+        for (int y = clearedY; y < BoardHeight - 1; y++)
+        {
+            for (int x = 0; x < BoardWidth; x++)
+            {
+                _grid[x, y, z] = _grid[x, y + 1, z];
+                if (_grid[x, y, z] != null)
+                {
+                    _grid[x, y, z].Position = new Vector3(x, y, z);
+                }
+                _grid[x, y + 1, z] = null;
+            }
+        }
+    }
+
+    private void ShiftColumnLineDownZ(int clearedY, int x)
+    {
+        for (int y = clearedY; y < BoardHeight - 1; y++)
+        {
+            for (int z = 0; z < BoardDepth; z++)
+            {
+                _grid[x, y, z] = _grid[x, y + 1, z];
+                if (_grid[x, y, z] != null)
+                {
+                    _grid[x, y, z].Position = new Vector3(x, y, z);
+                }
+                _grid[x, y + 1, z] = null;
+            }
+        }
+    }
+
+    // --- Camera & Movement Helpers ---
+
+    private Vector3I GetCameraRelativeDirection(Vector3I localInput)
+    {
+        int step = Mathf.PosMod(Mathf.RoundToInt(_targetYRotation / (Mathf.Pi / 2.0f)), 4);
+
+        return step switch
+        {
+            0 => localInput,
+            1 => new Vector3I(localInput.Z, localInput.Y, -localInput.X),
+            2 => new Vector3I(-localInput.X, localInput.Y, -localInput.Z),
+            3 => new Vector3I(-localInput.Z, localInput.Y, localInput.X),
+            _ => localInput
+        };
     }
 
     private bool IsValidPosition(List<Vector3I> blocks, Vector3I gridPos)
@@ -238,13 +485,11 @@ public partial class Main : Node3D
         {
             Vector3I target = gridPos + b;
 
-            // Check 3D boundary limits (Walls, Floor, Depth)
             if (target.X < 0 || target.X >= BoardWidth ||
                 target.Z < 0 || target.Z >= BoardDepth ||
                 target.Y < 0)
                 return false;
 
-            // Check if cell is occupied by locked block
             if (target.Y < BoardHeight && _grid[target.X, target.Y, target.Z] != null)
                 return false;
         }
@@ -278,77 +523,6 @@ public partial class Main : Node3D
         UpdateNextPieceUI();
     }
 
-    private void CheckAndClearLayers()
-    {
-        int layersCleared = 0;
-
-        for (int y = 0; y < BoardHeight; y++)
-        {
-            if (IsLayerFull(y))
-            {
-                ClearLayer(y);
-                ShiftLayersDownAbove(y);
-                layersCleared++;
-                y--;
-            }
-        }
-
-        if (layersCleared > 0)
-        {
-            _score += _linePoints[Mathf.Min(layersCleared, 4)];
-            UpdateScoreUI();
-        }
-    }
-
-    private bool IsLayerFull(int y)
-    {
-        for (int x = 0; x < BoardWidth; x++)
-        {
-            for (int z = 0; z < BoardDepth; z++)
-            {
-                if (_grid[x, y, z] == null)
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    private void ClearLayer(int y)
-    {
-        for (int x = 0; x < BoardWidth; x++)
-        {
-            for (int z = 0; z < BoardDepth; z++)
-            {
-                if (_grid[x, y, z] != null)
-                {
-                    _grid[x, y, z].QueueFree();
-                    _grid[x, y, z] = null;
-                }
-            }
-        }
-    }
-
-    private void ShiftLayersDownAbove(int clearedY)
-    {
-        for (int y = clearedY; y < BoardHeight - 1; y++)
-        {
-            for (int x = 0; x < BoardWidth; x++)
-            {
-                for (int z = 0; z < BoardDepth; z++)
-                {
-                    _grid[x, y, z] = _grid[x, y + 1, z];
-
-                    if (_grid[x, y, z] != null)
-                    {
-                        _grid[x, y, z].Position = new Vector3(x, y, z);
-                    }
-
-                    _grid[x, y + 1, z] = null;
-                }
-            }
-        }
-    }
-
     private void UpdateScoreUI()
     {
         if (_scoreLabel != null)
@@ -367,7 +541,6 @@ public partial class Main : Node3D
 
     private void SpawnPiece(string shapeKey, Color color)
     {
-        // Updated to Vector3I list copying
         _currentShapeBlocks = new List<Vector3I>(_shapes[shapeKey]);
         _currentPos = new Vector3I(2, 18, 2);
         _currentColor = color;
@@ -440,21 +613,15 @@ public partial class Main : Node3D
     {
         int dropDistance = 0;
 
-        // 1. Instantly calculate bottom position
         while (IsValidPosition(_currentShapeBlocks, _currentPos + new Vector3I(0, -1, 0)))
         {
             _currentPos += new Vector3I(0, -1, 0);
             dropDistance++;
         }
 
-        // 2. Move 3D meshes visually to the target position BEFORE locking
         UpdatePiecePosition();
-
-        // 3. Score bonus
         _score += dropDistance * 2;
         UpdateScoreUI();
-
-        // 4. Lock instantly
         LockPiece();
     }
 
@@ -469,3 +636,4 @@ public partial class Main : Node3D
         GetTree().ReloadCurrentScene();
     }
 }
+

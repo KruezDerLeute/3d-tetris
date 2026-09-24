@@ -3,19 +3,24 @@
 [ext_resource type="Script" uid="uid://tqyo6megwt4o" path="res://Main.cs" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://xpymlo5sn1r4" path="res://Block.tscn" id="2_h2yge"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l27gl"]
-transparency = 1
-albedo_color = Color(18.892157, 18.892157, 18.892157, 0.19607843)
-
-[sub_resource type="BoxMesh" id="BoxMesh_qxn02"]
-material = SubResource("StandardMaterial3D_l27gl")
-size = Vector3(10.2, 20.2, 0.1)
-
 [node name="Main" type="Node3D" unique_id=751829203]
 script = ExtResource("1_0xm2m")
 BlockScene = ExtResource("2_h2yge")
 
+[node name="DirectionalLight3D3" type="DirectionalLight3D" parent="." unique_id=379944920]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, -8.146662)
+
+[node name="DirectionalLight3D3" type="DirectionalLight3D" parent="DirectionalLight3D3" unique_id=1345316525]
+transform = Transform3D(-1, 6.181724e-08, -6.181724e-08, 0, 0.70710677, 0.70710677, 8.742278e-08, 0.70710677, -0.70710677, -1.3417744e-06, 16.187237, -23.49477)
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="." unique_id=362043134]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 7.992157, 0, 0)
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="DirectionalLight3D2" unique_id=887737986]
+transform = Transform3D(-1, 0, -8.742277e-08, 0, 1, 0, 8.742277e-08, 0, -1, 6.0519903e-07, 0, -13.845341)
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1260061641]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.6202655)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=40605281]
 
@@ -50,15 +55,9 @@ offset_right = 710.0
 offset_bottom = 421.0
 text = "Restart"
 
-[node name="BoardBorder" type="Node3D" parent="." unique_id=1144437503]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="BoardBorder" unique_id=1507128444]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 9.5, -0.5)
-mesh = SubResource("BoxMesh_qxn02")
-
 [node name="CameraPivot" type="Node3D" parent="." unique_id=955073185]
-transform = Transform3D(0.7141772, 0.29533514, -0.6346086, 0, 0.90662926, 0.42192852, 0.69996494, -0.30133173, 0.64749396, -1.4275007, 11.547872, 9.194841)
+transform = Transform3D(0.7071067, 0, -0.70710677, 0, 1.0000001, 0, 0.7071067, 0, 0.70710677, 2.8719673, 12.418436, 0.9293895)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=1444585596]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.852)
+transform = Transform3D(1, 0, 0, 0, 0.89415425, 0.44775906, 0, -0.44775906, 0.89415425, 0, 0, 14)
 current = true
