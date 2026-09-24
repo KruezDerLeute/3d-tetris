@@ -17,10 +17,6 @@ BlockScene = ExtResource("2_h2yge")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1260061641]
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=1444585596]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 9.5, 16)
-current = true
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=40605281]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1656581189]
@@ -59,3 +55,10 @@ text = "Restart"
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BoardBorder" unique_id=1507128444]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 9.5, -0.5)
 mesh = SubResource("BoxMesh_qxn02")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=955073185]
+transform = Transform3D(0.7141772, 0.29533514, -0.6346086, 0, 0.90662926, 0.42192852, 0.69996494, -0.30133173, 0.64749396, -1.4275007, 11.547872, 9.194841)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=1444585596]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.852)
+current = true
