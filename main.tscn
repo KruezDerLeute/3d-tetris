@@ -10,17 +10,17 @@ BlockScene = ExtResource("2_h2yge")
 [node name="DirectionalLight3D3" type="DirectionalLight3D" parent="." unique_id=379944920]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, -8.146662)
 
+[node name="DirectionalLight3D4" type="DirectionalLight3D" parent="DirectionalLight3D3" unique_id=887737986]
+transform = Transform3D(-2.1855693e-07, 0, 1, 0, 1, 0, -1, 0, -2.1855693e-07, 5.8531833, 0, -8.146663)
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="DirectionalLight3D3" unique_id=362043134]
+transform = Transform3D(1.3113416e-07, 0, -1, 0, 1, 0, 1, 0, 1.3113416e-07, -7.9921575, 0, -8.146661)
+
 [node name="DirectionalLight3D3" type="DirectionalLight3D" parent="DirectionalLight3D3" unique_id=1345316525]
 transform = Transform3D(-1, 6.181724e-08, -6.181724e-08, 0, 0.70710677, 0.70710677, 8.742278e-08, 0.70710677, -0.70710677, -1.3417744e-06, 16.187237, -23.49477)
 
-[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="." unique_id=362043134]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 7.992157, 0, 0)
-
-[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="DirectionalLight3D2" unique_id=887737986]
-transform = Transform3D(-1, 0, -8.742277e-08, 0, 1, 0, 8.742277e-08, 0, -1, 6.0519903e-07, 0, -13.845341)
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1260061641]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.6202655)
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="DirectionalLight3D3" unique_id=1260061641]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -1.203543e-06, 0, -13.766928)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=40605281]
 
@@ -56,8 +56,9 @@ offset_bottom = 421.0
 text = "Restart"
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=955073185]
-transform = Transform3D(0.7071067, 0, -0.70710677, 0, 1.0000001, 0, 0.7071067, 0, 0.70710677, 2.8719673, 12.418436, 0.9293895)
+transform = Transform3D(0.7071067, 0, -0.70710677, 0, 1.0000001, 0, 0.7071067, 0, 0.70710677, 2.8719673, 8.031273, -0.09195566)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=1444585596]
-transform = Transform3D(1, 0, 0, 0, 0.89415425, 0.44775906, 0, -0.44775906, 0.89415425, 0, 0, 14)
+transform = Transform3D(1.0000002, 0, 0, 0, 0.9396927, 0.34202006, 0, -0.3420201, 0.93969274, 4.7683716e-07, 9.532948, 28.000004)
 current = true
+fov = 39.2

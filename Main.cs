@@ -15,7 +15,8 @@ public partial class Main : Node3D
 
     private List<Vector3I> _currentShapeBlocks = new();
     private Vector3I _currentPos = new(2, 18, 2); // Spawns at top-center of a 5x20x5 grid
-    private List<Node3D> _activeBlockNodes = new();
+
+    private List<Node3D> _activeBlockNodes = new(); // holds the actual 3d shape blocks
     private List<Node3D> _ghostBlockNodes = new();
     private Color _currentColor = Colors.Cyan;
 
@@ -93,9 +94,16 @@ public partial class Main : Node3D
 
         _cameraPivot = GetNode<Node3D>("CameraPivot");
 
+        // Position pivot at exact center of the board: X=2, Y=9.5, Z=2
+        _cameraPivot.Position = new Vector3(
+            (BoardWidth - 1) / 2.0f,   // 2.0f
+            (BoardHeight - 1) / 2.0f,  // 9.5f
+            (BoardDepth - 1) / 2.0f    // 2.0f
+        );
+
         // Apply starting camera rotation
         Vector3 startRot = _cameraPivot.Rotation;
-        startRot.Y = _targetYRotation;
+        startRot.Y = 90;
         _cameraPivot.Rotation = startRot;
 
         UpdateScoreUI();
@@ -114,7 +122,7 @@ public partial class Main : Node3D
     {
         if (_isGameOver) return;
 
-        // --- Camera Rotation Inputs (Q / E) ---
+        // Camera Rotation Inputs (Q / E)
         if (Input.IsActionJustPressed("rotate_cam_left"))
             _targetYRotation += Mathf.Pi / 2.0f;
         else if (Input.IsActionJustPressed("rotate_cam_right"))
@@ -485,11 +493,14 @@ public partial class Main : Node3D
         {
             Vector3I target = gridPos + b;
 
+            // checking if the block is out of bounds
             if (target.X < 0 || target.X >= BoardWidth ||
                 target.Z < 0 || target.Z >= BoardDepth ||
                 target.Y < 0)
                 return false;
 
+            // checking if the block is above the board height and the target placement is null
+            // game over condition
             if (target.Y < BoardHeight && _grid[target.X, target.Y, target.Z] != null)
                 return false;
         }
@@ -565,8 +576,8 @@ public partial class Main : Node3D
             _activeBlockNodes.Add(blockInstance);
         }
 
-        SpawnGhostPiece();
-        UpdatePiecePosition();
+        SpawnGhostPiece(); // setting the ghostbody positions on the game board
+        UpdatePiecePosition(); // setting the position on the game board 
     }
 
     private void UpdatePiecePosition()
@@ -589,7 +600,7 @@ public partial class Main : Node3D
         {
             var blockInstance = BlockScene.Instantiate<Block>();
             AddChild(blockInstance);
-            blockInstance.SetColor(new Color(1, 1, 1, 0.3f));
+            blockInstance.SetColor(new Color(_currentColor).Darkened(0.5f));
             _ghostBlockNodes.Add(blockInstance);
         }
     }
@@ -597,6 +608,7 @@ public partial class Main : Node3D
     private void UpdateGhostPosition()
     {
         Vector3I ghostPos = _currentPos;
+        //checking if every unit is allowed to render ghost body
         while (IsValidPosition(_currentShapeBlocks, ghostPos + new Vector3I(0, -1, 0)))
         {
             ghostPos += new Vector3I(0, -1, 0);
