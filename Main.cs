@@ -8,7 +8,7 @@ public partial class Main : Node3D
 
     private const int BoardWidth = 5;
     private const int BoardHeight = 20;
-    private const int BoardDepth = 5;
+    private const int BoardDepth = 10;
 
     // 3D Grid Array [X, Y, Z]
     private Node3D[,,] _grid = new Node3D[BoardWidth, BoardHeight, BoardDepth];
@@ -580,6 +580,7 @@ public partial class Main : Node3D
         UpdatePiecePosition(); // setting the position on the game board 
     }
 
+    // Sets the currentShape's block positions
     private void UpdatePiecePosition()
     {
         for (int i = 0; i < _currentShapeBlocks.Count; i++)
